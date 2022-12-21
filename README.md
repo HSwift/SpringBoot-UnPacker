@@ -9,17 +9,19 @@ This tool does not verify that the JAR is packaged by SpringBoot and if the inpu
 ```
 SpringBoot UnPacker options_list
 Arguments:
-jarPath -> SpringBoot jar file path { String }
+    jarPath -> SpringBoot jar file path { String }
 Options:
---overwrite, -o [false] -> Overwrite the project dir, if it already exists
---decompiler, -d [FernFlower] -> Class files decompiler { Value should be one of [fernflower, cfr] }
---help, -h -> Usage info
+    --overwrite, -o [false] -> Overwrite the project dir, if it already exists
+    --decompiler, -d [FernFlower] -> Class files decompiler { Value should be one of [fernflower, cfr] }
+    --removeClassesFile, -r [false] -> Delete class files after decompiling
+    --help, -h -> Usage info
 ```
 
 ## Example
 
-```
-java -jar springboot-unpacker-1.0-SNAPSHOT.jar /path/to/jar
+Recover the web.jar to the source project, overwrite the old folder and delete the original class files
+```shell
+java -jar springboot-unpacker-1.0-SNAPSHOT.jar /path/to/web.jar -o -r
 ```
 
 ## Thanks
