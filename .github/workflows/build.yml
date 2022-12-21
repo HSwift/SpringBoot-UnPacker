@@ -20,7 +20,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: springboot-unpacker.vsix
+          name: springboot-unpacker.jar
           path: 'build/libs/*.jar'
       - name: Release
         uses: softprops/action-gh-release@v1
