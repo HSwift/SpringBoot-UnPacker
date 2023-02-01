@@ -2,12 +2,18 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import java.io.File
+import java.io.IOException
+import java.nio.file.FileVisitResult
 import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.deleteIfExists
-import kotlin.io.path.name
+import kotlin.io.path.listDirectoryEntries
 
 fun main(args: Array<String>) {
-    val parser = ArgParser("SpringBoot UnPacker")
+    val parser = ArgParser("SpringBoot-UnPacker")
     val jarPath by parser.argument(ArgType.String, description = "SpringBoot jar file path")
     val overwrite by parser.option(
         ArgType.Boolean,
@@ -24,6 +30,11 @@ fun main(args: Array<String>) {
         shortName = "r",
         description = "Remove class files after decompiling"
     ).default(false)
+    val excludeClasses by parser.option(
+        ArgType.String,
+        shortName = "e",
+        description = "Package prefixes to be excluded during decompiling, multiple inputs separated by ','",
+    )
     parser.parse(args)
 
     val jarFile = File(jarPath)
@@ -44,14 +55,34 @@ fun main(args: Array<String>) {
     projectDir.mkdir()
 
     val jarUnpack = JarUnpack(jarFile, projectDir)
-    val classDir = projectDir.resolve("src/main/java/")
     jarUnpack.unpack()
-    decompile(decompiler, classDir.absolutePath)
-    if(removeClassesFile){
-        Files.walk(classDir.toPath()).forEach {
-            if(it.name.endsWith(".class")){
-                it.deleteIfExists()
-            }
+
+    val classesDir = projectDir.resolve("classes")
+    val excludeClassesRegex =
+        excludeClasses?.split(":")
+            ?.map { "^" + Regex.escape("${classesDir.absolutePath}/${it.replace(".", "/")}") + ".*" }
+            ?.reduce { acc, s -> "$acc|$s" }
+            ?.toRegex()
+    decompile(decompiler, projectDir, excludeClassesRegex)
+    if (removeClassesFile) {
+        if (excludeClassesRegex == null) {
+            classesDir.deleteRecursively()
+            return
         }
+        Files.walkFileTree(classesDir.toPath(), object : SimpleFileVisitor<Path>() {
+            override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+                if (!excludeClassesRegex.matches(file.absolutePathString())) {
+                    file.deleteIfExists()
+                }
+                return FileVisitResult.CONTINUE
+            }
+
+            override fun postVisitDirectory(dir: Path, exc: IOException?): FileVisitResult {
+                if (dir.listDirectoryEntries().isEmpty()) {
+                    dir.deleteIfExists()
+                }
+                return FileVisitResult.CONTINUE
+            }
+        })
     }
 }

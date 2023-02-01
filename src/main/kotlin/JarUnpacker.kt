@@ -39,7 +39,7 @@ class JarUnpack(filename: File, private val target: File) {
     }
 
     private fun classesHandler(entry: ZipEntry) {
-        val classesDir = target.resolve("src/main/java/")
+        val classesDir = target.resolve("classes")
         val filename = entry.name.substring(17) // remove 'BOOT-INF/classes/'
         val packagePath = ".+?/(?=[^/]+\$)".toRegex().find(filename)?.value
         if (packagePath != null && !classesDir.resolve(packagePath).exists()) {

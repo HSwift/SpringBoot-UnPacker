@@ -1,6 +1,6 @@
+import java.io.File
 import java.nio.file.Files
-import java.nio.file.Paths
-import kotlin.io.path.pathString
+import kotlin.io.path.absolutePathString
 import kotlin.streams.toList
 import org.benf.cfr.reader.Main as CFR
 import org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler as FernFlower
@@ -10,24 +10,35 @@ enum class Decompilers {
     CFR,
 }
 
-fun fernFlowerDecompile(path: String) {
+fun fernFlowerDecompile(args: MutableList<String>, sourceDir: String) {
+    args.add(sourceDir)
     println("[INFO] decompile class file with fernFlower")
-    FernFlower.main(arrayOf(path, path))
+    FernFlower.main(args.toTypedArray())
 }
 
-fun cfrDecompile(path: String) {
-    val all = Files.walk(Paths.get(path)).map { it.pathString }.filter { it.endsWith(".class") }.toList<String>()
-        .toMutableList()
-    all.add("--outputpath")
-    all.add(path)
+fun cfrDecompile(args: MutableList<String>, sourceDir: String) {
+    args.add("--outputpath")
+    args.add(sourceDir)
     println("[INFO] decompile class file with cfr")
-    CFR.main(all.toTypedArray())
+    CFR.main(args.toTypedArray())
 }
 
-fun decompile(decompiler: Decompilers, path: String) {
-    if (decompiler == Decompilers.FernFlower) {
-        fernFlowerDecompile(path)
-    } else if (decompiler == Decompilers.CFR) {
-        cfrDecompile(path)
+fun decompile(decompiler: Decompilers, target: File, excludeClasses: Regex?) {
+    val classesDir = target.resolve("classes")
+    val sourceDir = target.resolve("src/main/java/")
+    sourceDir.mkdirs()
+    var classes = Files.walk(classesDir.toPath()).map { it.absolutePathString() }.filter { it.endsWith(".class") }
+        .toList<String>()
+
+    if (excludeClasses != null) {
+        classes = classes.filter {
+            !excludeClasses.matches(it)
+        }
     }
+    if (decompiler == Decompilers.FernFlower) {
+        fernFlowerDecompile(classes.toMutableList(), sourceDir.path)
+    } else if (decompiler == Decompilers.CFR) {
+        cfrDecompile(classes.toMutableList(), sourceDir.path)
+    }
+
 }
