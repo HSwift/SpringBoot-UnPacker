@@ -91,7 +91,7 @@ class JarUnpack(filename: File, private val target: File) {
                     classesHandler(it, "BOOT-INF/classes/")
                 }
 
-                fileName.startsWith("WEB-INF/classes/") && !fileName.endsWith(".class") -> {
+                fileName.startsWith("BOOT-INF/classes/") && !fileName.endsWith(".class") -> {
                     resourcesHandler(it, "BOOT-INF/classes/")
                 }
 
@@ -108,7 +108,7 @@ class JarUnpack(filename: File, private val target: File) {
                 }
 
                 fileName.startsWith("WEB-INF/classes/") && !fileName.endsWith(".class") -> {
-                    resourcesHandler(it, "WEB-INF/lib/")
+                    resourcesHandler(it, "WEB-INF/classes/")
                 }
             }
         }
