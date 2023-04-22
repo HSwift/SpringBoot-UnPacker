@@ -104,7 +104,7 @@ class JarUnpack(filename: File, private val target: File) {
                 }
 
                 fileName.startsWith("WEB-INF/classes/") && fileName.endsWith(".class") -> {
-                    classesHandler(it, "WEB-INF/lib/")
+                    classesHandler(it, "WEB-INF/classes/")
                 }
 
                 fileName.startsWith("WEB-INF/classes/") && !fileName.endsWith(".class") -> {
