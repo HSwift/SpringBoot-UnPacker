@@ -38,32 +38,32 @@ class JarUnpack(filename: File, private val target: File) {
         }
     }
 
-    private fun classesHandler(entry: ZipEntry) {
+    private fun classesHandler(entry: ZipEntry, prefix: String) {
         val classesDir = target.resolve("classes")
-        val filename = entry.name.substring(17) // remove 'BOOT-INF/classes/'
+        val filename = entry.name.removePrefix(prefix)
         val packagePath = ".+?/(?=[^/]+\$)".toRegex().find(filename)?.value
         if (packagePath != null && !classesDir.resolve(packagePath).exists()) {
             classesDir.resolve(packagePath).mkdirs()
         }
         jarFile.getInputStream(entry).use { input ->
             classesDir.resolve(filename).outputStream().use { output ->
-                println("[INFO] create $filename")
+                println("[INFO] create class $filename")
                 input.copyTo(output)
             }
         }
     }
 
-    private fun resourcesHandler(entry: ZipEntry) {
+    private fun resourcesHandler(entry: ZipEntry, prefix: String) {
         val resourcesDir = target.resolve("src/main/resources/")
         if (!entry.isDirectory) {
-            val filename = entry.name.substring(17) // remove 'BOOT-INF/classes'
+            val filename = entry.name.removePrefix(prefix)
             val packagePath = ".+?/(?=[^/]+\$)".toRegex().find(filename)?.value
             if (packagePath != null && !resourcesDir.resolve(packagePath).exists()) {
                 resourcesDir.resolve(packagePath).mkdirs()
             }
             jarFile.getInputStream(entry).use { input ->
                 resourcesDir.resolve(filename).outputStream().use { output ->
-                    println("[INFO] create $filename")
+                    println("[INFO] create resource $filename")
                     input.copyTo(output)
                 }
             }
@@ -88,11 +88,27 @@ class JarUnpack(filename: File, private val target: File) {
                 }
 
                 fileName.startsWith("BOOT-INF/classes/") && fileName.endsWith(".class") -> {
-                    classesHandler(it)
+                    classesHandler(it, "BOOT-INF/classes/")
                 }
 
-                fileName.startsWith("BOOT-INF/classes/") && !fileName.endsWith(".class") -> {
-                    resourcesHandler(it)
+                fileName.startsWith("WEB-INF/classes/") && !fileName.endsWith(".class") -> {
+                    resourcesHandler(it, "BOOT-INF/classes/")
+                }
+
+                fileName.startsWith("WEB-INF/lib/") -> {
+                    libsHandler(it)
+                }
+
+                fileName.startsWith("WEB-INF/lib-provided/") -> {
+                    libsHandler(it)
+                }
+
+                fileName.startsWith("WEB-INF/classes/") && fileName.endsWith(".class") -> {
+                    classesHandler(it, "WEB-INF/lib/")
+                }
+
+                fileName.startsWith("WEB-INF/classes/") && !fileName.endsWith(".class") -> {
+                    resourcesHandler(it, "WEB-INF/lib/")
                 }
             }
         }
