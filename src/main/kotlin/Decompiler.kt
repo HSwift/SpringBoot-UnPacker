@@ -1,6 +1,6 @@
 import java.io.File
 import java.nio.file.Files
-import kotlin.io.path.absolutePathString
+import kotlin.io.path.pathString
 import kotlin.streams.toList
 import org.benf.cfr.reader.Main as CFR
 import org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler as FernFlower
@@ -10,35 +10,26 @@ enum class Decompilers {
     CFR,
 }
 
-fun fernFlowerDecompile(args: MutableList<String>, sourceDir: String) {
-    args.add(sourceDir)
+fun fernFlowerDecompile(classDir: File) {
     println("[INFO] decompile class file with fernFlower")
-    FernFlower.main(args.toTypedArray())
+    FernFlower.main(arrayOf(classDir.absolutePath, classDir.absolutePath))
 }
 
-fun cfrDecompile(args: MutableList<String>, sourceDir: String) {
-    args.add("--outputpath")
-    args.add(sourceDir)
+fun cfrDecompile(classDir: File) {
     println("[INFO] decompile class file with cfr")
-    CFR.main(args.toTypedArray())
+    val all = Files.walk(classDir.toPath()).map { it.pathString }.filter { it.endsWith(".class") }.toList<String>()
+        .toMutableList()
+    all.add("--outputpath")
+    all.add(classDir.absolutePath)
+    println("[INFO] decompile class file with cfr")
+    CFR.main(all.toTypedArray())
 }
 
-fun decompile(decompiler: Decompilers, target: File, excludeClasses: Regex?) {
-    val classesDir = target.resolve("classes")
-    val sourceDir = target.resolve("src/main/java/")
-    sourceDir.mkdirs()
-    var classes = Files.walk(classesDir.toPath()).map { it.absolutePathString() }.filter { it.endsWith(".class") }
-        .toList<String>()
-
-    if (excludeClasses != null) {
-        classes = classes.filter {
-            !excludeClasses.matches(it)
-        }
-    }
+fun decompile(decompiler: Decompilers, target: File) {
     if (decompiler == Decompilers.FernFlower) {
-        fernFlowerDecompile(classes.toMutableList(), sourceDir.path)
+        fernFlowerDecompile(target)
     } else if (decompiler == Decompilers.CFR) {
-        cfrDecompile(classes.toMutableList(), sourceDir.path)
+        cfrDecompile(target)
     }
 
 }
