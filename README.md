@@ -8,14 +8,15 @@ This tool does not verify that the JAR is packaged by SpringBoot and if the inpu
 
 ```
 SpringBoot-UnPacker options_list
-Arguments:
+Arguments: 
     jarPath -> SpringBoot jar file path { String }
-Options:
-    --overwrite, -o [false] -> Overwrite the project dir, if it already exists
+Options: 
+    --overwrite, -o [false] -> Overwrite the project dir, if it already exists 
     --decompiler, -d [FernFlower] -> Select the class files decompiler { Value should be one of [fernflower, cfr] }
-    --removeClassesFile, -r [false] -> Remove class files after decompiling
+    --removeClassesFile, -r [false] -> Remove class files after decompiling 
     --excludeClasses, -e -> Package prefixes to be excluded during decompiling, multiple inputs separated by ',' { String }
-    --help, -h -> Usage info
+    --includeClasses, -i -> Package prefixes to be included during decompiling, multiple inputs separated by ',' { String }
+    --help, -h -> Usage info 
 ```
 
 ## Example
