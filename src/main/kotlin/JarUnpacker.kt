@@ -50,6 +50,10 @@ class JarUnpack(filename: File, private val target: File) {
     }
 
     private fun pomHandler(pomFileList: List<String>) {
+        if (pomFileList.size == 1) {
+            copyPomFile(pomFileList[0])
+            return
+        }
         val packageNames =
             pomFileList.map { it.removePrefix("META-INF/maven/").removeSuffix("/pom.xml").replace("/", ".") }
         var targetPackage = packageNames.indexOfFirst { startClass.startsWith("$it.") }
