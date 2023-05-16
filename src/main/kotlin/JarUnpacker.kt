@@ -39,7 +39,7 @@ class JarUnpack(filename: File, private val target: File) {
     }
 
     private fun createDefaultPomFile() {
-        println("[INFO] use default pom.xml")
+        println("[WARN] no pom.xml found in the jar, try to generate from template")
         val defaultPom = JarUnpack::class.java.getResource("pom.template.xml")!!.readText()
         val pomContent = defaultPom
             .replace("\${groupId}", groupId)
@@ -96,8 +96,18 @@ class JarUnpack(filename: File, private val target: File) {
 
     private fun manifestHandler(entry: ZipEntry) {
         val manifest = Manifest(jarFile.getInputStream(entry))
-        startClass = manifest.mainAttributes.getValue("Start-Class")
-        springBootVersion = manifest.mainAttributes.getValue("Spring-Boot-Version")
+        try {
+            startClass = manifest.mainAttributes.getValue("Start-Class")
+        } catch (e: java.lang.NullPointerException){
+            println("[WARN] No Start-Class is given in MANIFEST.MF, use the default value 'com.example.demo.DemoApplication'")
+            startClass = "com.example.demo.DemoApplication"
+        }
+        try {
+            springBootVersion = manifest.mainAttributes.getValue("Spring-Boot-Version")
+        }catch (e: java.lang.NullPointerException){
+            println("[WARN] No Spring-Boot-Version is given in MANIFEST.MF, use the default value '2.7.11'")
+            springBootVersion = "2.7.11"
+        }
         try {
             javaVersion = manifest.mainAttributes.getValue("Build-Jdk-Spec")
         } catch (e: java.lang.NullPointerException) {
