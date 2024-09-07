@@ -29,3 +29,5 @@ build/
 
 # Maven files
 target
+
+.idea
